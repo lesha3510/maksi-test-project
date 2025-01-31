@@ -1,38 +1,40 @@
 .wrapper {
-	display: flex;
-	flex-direction: column;
-	gap: 15px;
-	width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
 }
 
 .filters {
-	@media (max-width: $medium) {
-		flex-direction: column;
-	}
+  @media (max-width: $medium) {
+    flex-direction: column;
+  }
 }
 
 .tools {
-	width: 100%;
-	display: flex;
-	justify-content: space-between;
-	gap: 15px;
-	flex-wrap: wrap;
-	@media (max-width: $medium) {
-		* {
-			width: 100%;
-		}
-		flex-direction: column;
-	}
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+  @media (max-width: $medium) {
+    & {
+      flex-direction: column;
+    }
+    * {
+      width: 100%;
+    }
+  }
 }
 
 .tableWrapper {
-	@media (max-width: $large) {
-		width: 100%;
-		overflow: scroll;
-	}
+  @media (max-width: $large) {
+    width: 100%;
+    overflow: scroll;
+  }
 }
 
 .table {
-	width: 100%;
-	min-width: 900px;
+  width: 100%;
+  min-width: 900px;
 }

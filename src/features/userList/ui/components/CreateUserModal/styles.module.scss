@@ -1,11 +1,11 @@
 .form {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 
-	& > div {
-		margin: 0;
-	}
+  & > div {
+    margin: 0;
+  }
 }
 
 :global(.ant-form-item-required) {
