@@ -12,15 +12,20 @@
     "@ant-design/icons": "^5.6.0",
     "@ant-design/nextjs-registry": "^1.0.2",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@hookform/resolvers": "^3.10.0",
     "@reduxjs/toolkit": "^2.5.1",
     "antd": "^5.23.3",
     "axios": "^1.7.9",
+    "clsx": "^2.1.1",
     "lodash": "^4.17.21",
     "next": "15.1.6",
+    "normalize.css": "^8.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
     "react-redux": "^9.2.0",
-    "sass": "^1.83.4"
+    "sass": "^1.83.4",
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

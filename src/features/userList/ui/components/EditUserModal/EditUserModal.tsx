@@ -1,64 +1,89 @@
 import { Input, Modal, Form, Button, message } from "antd";
-import type { ICreateUserModal } from "./CreateUserModal.types";
+import type { IEditUserModal } from "./EditUserModal.types";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { getValidationSchema } from "./CreateUserModal.utils";
-import { useEffect } from "react";
+import { getValidationSchema } from "./EditUserModal.utils";
+import { useEffect, useState } from "react";
 
 import css from "./styles.module.scss";
-import { placeholderText } from "./CreateUserModal.const";
-import { addUser, User } from "@/entities/user/model/userSlice";
+import { placeholderText } from "./EditUserModal.const";
+import { addUser, editUser, User } from "@/entities/user/model/userSlice";
 import { useDispatch } from "react-redux";
 
-const CreateUserModal = ({ isOpen, onClose }: ICreateUserModal) => {
+const EditUserModal = ({ user, isOpen, onClose }: IEditUserModal) => {
 	const dispatch = useDispatch();
 	const methods = useForm({
 		resolver: yupResolver(getValidationSchema()),
 		shouldFocusError: true,
 	});
+	const [isLoading, setIsLoading] = useState(false);
 
 	const {
 		handleSubmit,
 		reset,
+		setValue,
 		formState: { errors },
 		control,
 	} = methods;
 
 	useEffect(() => {
-		if (isOpen) reset();
-	}, [isOpen, reset]);
+		if (isOpen && user) {
+			const defaultValues = {
+				name: user?.name,
+				userName: user?.userName,
+				email: user?.email,
+				phone: user?.phone,
+				zipcode: user?.zipCode,
+			};
+
+			Object.entries(defaultValues).forEach(([field, actualValue]) => {
+				setValue(field, actualValue);
+			});
+		}
+	}, [user, isOpen, setValue]);
 
 	const handleSave = async (data: User) => {
 		try {
-			const newUser = {
-				id: Date.now(),
+			setIsLoading(true); // Блокируем кнопку на время обработки
+
+			const updatedUser = {
+				id: user.id,  // Используем ID существующего пользователя
 				name: data.name,
 				email: data.email,
 				phone: data.phone,
 			};
 
-			dispatch(addUser(newUser));
-			message.success("Пользователь успешно добавлен!");
+			// Эмуляция запроса на сервер (или любое другое сохранение)
+			dispatch(editUser(updatedUser));
+			message.success("Пользователь успешно отредактирован!");
 
 			onClose();
 			reset();
 		} catch (error) {
-			message.error("Ошибка при добавлении пользователя!");
+			message.error("Ошибка при редактировании пользователя! " + (error instanceof Error ? error.message : ""));
 			console.error(error);
+		} finally {
+			setIsLoading(false); // Открываем кнопку после завершения
 		}
 	};
 
 	return (
 		<Modal
-			title="Добавить пользователя"
+			title="Редактирование пользователя"
 			open={isOpen}
 			onCancel={onClose}
 			footer={[
 				<Button key="cancel" onClick={onClose}>
 					Отмена
 				</Button>,
-				<Button key="add" type="primary" onClick={handleSubmit(handleSave)}>
-					Добавить
+				<Button
+					key="add"
+					type="primary"
+					loading={isLoading} // Добавляем состояние загрузки
+					onClick={handleSubmit(handleSave)}
+					disabled={isLoading} // Отключаем кнопку во время загрузки
+				>
+					Отредактировать
 				</Button>,
 			]}
 		>
@@ -89,4 +114,4 @@ const CreateUserModal = ({ isOpen, onClose }: ICreateUserModal) => {
 	);
 };
 
-export default CreateUserModal;
+export default EditUserModal;

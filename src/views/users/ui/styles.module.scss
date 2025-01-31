@@ -5,8 +5,15 @@
   align-items: center;
   height: 100vh;
   gap: 30px;
+  padding: 40px 0;
 }
 
 .title {
   text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .wrapper {
+    height: 100%;
+  }
 }

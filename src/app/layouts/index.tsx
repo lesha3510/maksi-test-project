@@ -2,6 +2,8 @@
 import { Inter } from "next/font/google";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import '@ant-design/v5-patch-for-react-19';
+import '../styles/global.scss';
+import "normalize.css";
 import { Provider } from "react-redux";
 import { store } from "../providers/store";
 

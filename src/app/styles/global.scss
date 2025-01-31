@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+	display: flex;
+	flex-direction: column;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: $widthContainer;
+  padding: 0 40px;
+  width: 100%;
+
+  @media (max-width: $large) {
+    padding: 0 20px;
+  }
+
+  @media (max-width: $medium) {
+    padding: 0 24px;
+  }
+
+  @media (max-width: $small) {
+    padding: 0 16px;
+  }
+}

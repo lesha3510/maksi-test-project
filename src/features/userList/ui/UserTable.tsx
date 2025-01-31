@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Table, Button, Space, Tag, message } from "antd";
+import { useEffect, useState, useCallback } from "react";
+import { Table, Button, Space, Tag, message, Input, Popconfirm } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUsers } from "@/entities/user/model/userSlice";
+import { deleteUsers, fetchUsers, setFilteredUsers, User } from "@/entities/user/model/userSlice";
 import { RootState, AppDispatch } from "@/app/providers/store";
 import axios from "axios";
 import { debounce } from "lodash";
@@ -15,7 +15,7 @@ import { columns } from "./UserTable.const";
 export const UserTable = () => {
 	// Redux
 	const dispatch = useDispatch<AppDispatch>();
-	const { users, loading } = useSelector((state: RootState) => state.users);
+	const { users, filteredUsers, loading } = useSelector((state: RootState) => state.users);
 
 	// Для выбора строк
 	const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -26,29 +26,21 @@ export const UserTable = () => {
 	// Для подгрузки данных
 	const [hasMore, setHasMore] = useState(true);
 	const [loadingMore, setLoadingMore] = useState(false);
-	const [page, setPage] = useState(1);
+
+	// Для фильтрации
+	const [filters, setFilters] = useState({ name: "", email: "", phone: "" });
 
 	// Обработчики модалки
-	const handleOpenCreateModal = () => {
-		setIsCreateModalOpen(true);
-	};
-	const handleCloseCreateModal = () => {
-		setIsCreateModalOpen(false);
-	};
+	const handleOpenCreateModal = () => setIsCreateModalOpen(true);
+	const handleCloseCreateModal = () => setIsCreateModalOpen(false);
 
-	// Обработчики Toobar
-	const handleRowSelectionChange = (selectedRowKeys: React.Key[]) => {
-		setSelectedRowKeys(selectedRowKeys);
-	};
-	const handleTagClose = () => {
-		setSelectedRowKeys([]);
-	};
+	// Обработчики Toolbar
+	const handleRowSelectionChange = (selectedRowKeys: React.Key[]) => setSelectedRowKeys(selectedRowKeys);
+	const handleTagClose = () => setSelectedRowKeys([]);
 
 	// API
 	const loadMoreData = async () => {
 		if (!hasMore || loadingMore) return;
-
-		console.log("Loading more data...");
 
 		setLoadingMore(true);
 
@@ -57,24 +49,43 @@ export const UserTable = () => {
 			if (response.data.length <= 10) {
 				setHasMore(false);
 			}
-			setPage((prevPage) => prevPage + 1);
+			message.info("Симуляция lazyLoading");
 		} catch (error) {
 			message.error("Ошибка при загрузке данных");
+			console.error(error);
 		} finally {
 			setLoadingMore(false);
 		}
 	};
-
-
-	const debouncedLoadMoreData = debounce(() => {
-		loadMoreData();
-	}, 300);
-
+	const debouncedLoadMoreData = debounce(loadMoreData, 300);
 	const handleScroll = (e) => {
 		const { scrollTop, scrollHeight, clientHeight } = e.target;
-
 		if (scrollHeight - scrollTop - clientHeight <= 10) {
 			debouncedLoadMoreData();
+		}
+	};
+
+	// Обработчики фильтрации
+	const handleFilterChange = (value: string, key: string) => {
+		setFilters((prev) => ({ ...prev, [key]: value }));
+	};
+	const handleResetFilters = () => setFilters({ name: "", email: "", phone: "" });
+	const applyFilters = useCallback((users: User[], filters: { name: string; email: string; phone: string }) => {
+		return users.filter((user) => Object.entries(filters).every(([key, value]) => user[key as keyof User].toLowerCase().includes(value.toLowerCase())));
+	}, []);
+
+	// Обраотчик удаления пользователя
+	const handleDeleteUser = async () => {
+		try {
+			// Делаем запрос на удаление выбранных пользователей
+			dispatch(deleteUsers(selectedRowKeys as number[]));
+
+			// Очистить выбор после удаления
+			setSelectedRowKeys([]);
+			message.success("Пользователи успешно удалены");
+		} catch (error) {
+			message.error("Ошибка при удалении пользователей");
+			console.error(error);
 		}
 	};
 
@@ -82,41 +93,63 @@ export const UserTable = () => {
 		dispatch(fetchUsers());
 	}, [dispatch]);
 
+	useEffect(() => {
+		dispatch(setFilteredUsers(applyFilters(users, filters)));
+	}, [filters, users, dispatch, applyFilters]);
+
 	return (
 		<div className={css.wrapper}>
 			<Space className={css.tools}>
-				{selectedRowKeys.length > 0 ? (
-					<Button type="primary" danger onClick={handleOpenCreateModal}>
-						Удалить
-					</Button>
-				) : (
-					<Button type="primary" onClick={handleOpenCreateModal}>
-						Добавить
-					</Button>
-				)}
-				{selectedRowKeys.length > 0 && (
-					<Tag color={selectedRowKeys.length > 0 ? "blue" : "default"} closable onClose={handleTagClose}>
-						{selectedRowKeys.length} {selectedRowKeys.length === 1 ? "строка выбрана" : "строк выбрано"}
-					</Tag>
-				)}
+				<Space className={css.filters}>
+					<Input placeholder="Фильтровать по name" value={filters.name} onChange={(e) => handleFilterChange(e.target.value, "name")} />
+					<Input placeholder="Фильтровать по email" value={filters.email} onChange={(e) => handleFilterChange(e.target.value, "email")} />
+					<Input placeholder="Фильтровать по phone" value={filters.phone} onChange={(e) => handleFilterChange(e.target.value, "phone")} />
+					<Button onClick={handleResetFilters}>Сбросить фильтры</Button>
+				</Space>
+				<Space className={css.actions}>
+					{selectedRowKeys.length > 0 ? (
+						<>
+							<Popconfirm
+								classNames={{
+									root: "small",
+								}}
+								title="Вы уверены, что хотите удалить выбранных пользователей?"
+								onConfirm={handleDeleteUser}
+								okText="Да"
+								cancelText="Нет"
+							>
+								<Button type="primary" danger>
+									Удалить
+								</Button>
+							</Popconfirm>
+							<Tag color="blue" closable onClose={handleTagClose}>
+								{selectedRowKeys.length} {selectedRowKeys.length === 1 ? "строка выбрана" : "строк выбрано"}
+							</Tag>
+						</>
+					) : (
+						<Button type="primary" onClick={handleOpenCreateModal}>
+							Добавить
+						</Button>
+					)}
+				</Space>
 			</Space>
-
-			<Table
-				rowKey="id"
-				className={css.table}
-				columns={columns}
-				dataSource={users}
-				loading={loading || loadingMore}
-				rowSelection={{
-					selectedRowKeys,
-					onChange: (newSelectedRowKeys: any[]) => setSelectedRowKeys(newSelectedRowKeys),
-				}}
-				onScroll={handleScroll}
-				scroll={{ y: 400 }}
-				pagination={false}
-			/>
-
-			<CreateUserModal isOpen={isCreateModalOpen} onClose={handleCloseCreateModal} />
+			<div className={css.tableWrapper}>
+				<Table
+					rowKey="id"
+					className={css.table}
+					columns={columns}
+					dataSource={filteredUsers}
+					loading={loading || loadingMore}
+					rowSelection={{
+						selectedRowKeys,
+						onChange: handleRowSelectionChange,
+					}}
+					onScroll={handleScroll}
+					scroll={{ y: 430 }}
+					pagination={false}
+				/>
+				<CreateUserModal isOpen={isCreateModalOpen} onClose={handleCloseCreateModal} />
+			</div>
 		</div>
 	);
 };

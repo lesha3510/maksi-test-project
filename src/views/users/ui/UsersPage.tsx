@@ -5,11 +5,13 @@ import css from "./styles.module.scss";
 
 export const UsersPage = () => {
 	return (
-		<div className={css.wrapper}>
-			<Title className={css.title} level={1}>
-				Список пользователей
-			</Title>
-			<UserTable />
+		<div className="container">
+			<div className={css.wrapper}>
+				<Title className={css.title} level={1}>
+					Список пользователей
+				</Title>
+				<UserTable />
+			</div>
 		</div>
 	);
 };
