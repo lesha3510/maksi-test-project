@@ -6,14 +6,15 @@
   & > div {
     margin: 0;
   }
+  
+  :global(.ant-form-item-required) {
+    &::before {
+      margin-left: 6px;
+      order: 1;
+    }
+    &::after {
+      display: none;
+    }
+  }
 }
 
-:global(.ant-form-item-required) {
-  &::before {
-    margin-left: 6px;
-    order: 1;
-  }
-  &::after {
-    display: none;
-  }
-}
